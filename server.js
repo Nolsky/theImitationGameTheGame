@@ -3,6 +3,7 @@ var PORT = 8124;
 var IP = 'localhost';
 var sockets = [];
 var botNames = ['Adam', 'Alec', 'Allan', 'Aman', 'Anson', 'Benny', 'Burke', 'Chloe', 'Christian', 'David', 'Diego', 'Dilsher', 'Enji', 'Gaurav', 'Greg', 'Jae', 'John', 'Jordan', 'Joyce', 'JP', 'Justin', 'Ken', 'Kony', 'Kristie-Desiree', 'Michael', 'Nils', 'Nolan', 'Nolsky', 'Ricardo', 'Richelle', 'Ringo', 'Servio', 'Shane', 'Shayan', 'Steven', 'Thu', 'Xizhou', 'Zach', 'Abel', 'Alan', 'Vincent', 'Andrew', 'Arjun', 'Brandon', 'Celeste', 'Charles', 'Charlie', 'Chris', 'Eddie', 'James', 'Jenn', 'Jessie', 'Jun', 'Lisette', 'Matt', 'Michelle', 'Nicholas', 'Nick', 'Rebecca', 'Richard', 'Roy', 'Ruby', 'Sonia', 'Spencer', 'Tinh', 'Trey', 'Gwynn', 'Liz', 'Fred', 'Sophie', 'Beth', 'Joel', 'Mylani', 'Jonathan', 'Alex', 'Anoop', 'Jane', 'Julia', 'Luke', 'Zachary', 'Meesh', 'Ash', 'Blake', 'Mary', 'Taylor', 'Tony', 'Mia', 'Marcus', 'Spectator'];
+var botLines = ['hello', 'hi', 'whats up', 'wat', 'how do you play this', 'I think mine is buggd', 'dude, this is sick', 'amazing', 'woah', 'whhhhhaaaaaatttt', 'I swear guys I am not the bot', 'The screen just takes some getting used to, you just need to get used to not seeing what you are typing', 'Nolsky is so job ready', 'this game is awesome', 'guys how many bots have we found?', 'so many messagesssssss', 'IF WE ALL TALK IN CAPS THE BOTS WONT CATCH ON', 'I wish my mvp was this good', 'this mvp is siccccckkkkk', 'Im totally going to beat all you guys', 'dont crash the server', 'dude wtf is going on', 'best stress test 2018', 'GUYS I THINK '+ botNames[Math.floor(Math.random() * botNames.length)] + 'is a bot', 'how long did this whole thing take?', 'LOL', 'WTF', 'OMG', 'Beep boop I am a bot', 'guy below me is a bot', 'Anything you can bot I can bot better', 'awdfasdgahwbyw22b5', 'qwfhq0mp  q 34 ojgrwe0 q24 2j9329', ' fqe r12  55q qef ef rjyt t rdy', '?', 'you guys are gonna crash it', 'man I hope this project works', 'insert b0t proof phrase here', 'LAUNCH THE SKYNET!', 'WhEn_In_DaNGeR_FeaR_Or_DOuBt__RUn_iN_CIRclEs_scReAM_&_ShoUt', 'did we get all the bots yet?', 'You could tell he was running out of ideas for lines to have the bots say', 'man this was fun', 'GGs', 'BOTS WIN', 'BOTS ALWAYS WIN', 'Man what a tough game', 'ARRGGG', 'LOlz', 'I hope everyone had a great time at Hack Reactor, its been a pleasure working alongside you all', 'peace out'];
 var users = {};
 var roundPlaying = false;
 var unusedNames = [];
@@ -10,6 +11,7 @@ var botsRemaining = 0;
 var bots = {};
 var botArr = [];
 var gamesDuration = 0;
+var lastBotMessage = Date.parse(new Date());
 
 var server = net.createServer(function(socket) {
   console.log('client connected USER ID:' + socket._handle.fd);
@@ -21,7 +23,7 @@ var server = net.createServer(function(socket) {
     'Connected as User: ' + userID + ' \n ' +
     'To change your User ID Type \'RENAME <new name here>\' \n ' +
     'Names are shuffled when games are in progress \n ' +
-    'Begin a new game by saying \'NEWGAME\'');
+    'Begin a new game by saying \'NEWGAME\' \n');
 
   if (!!roundPlaying) {
     socket.botId = unusedNames.splice(Math.floor(Math.random() * unusedNames.length), 1);
@@ -119,28 +121,39 @@ var server = net.createServer(function(socket) {
 
   var gameLogic = function() {
     if (gamesDuration === 0 ) {
+      lastBotMessage = Date.parse(new Date());
       let botCount = Math.ceil(Math.random() * 5 + sockets.length);
       for (var i = 0; i < botCount; i++) {
         botArr.push(unusedNames.splice(Math.floor(Math.random() * unusedNames.length), 1));
       }
       botsRemaining = botCount;
+      gamesDuration++;
     }
     if (gamesDuration === 1) {
       console.log('Running game logic');
-      sockets.map(function(c,i,a){
+      sockets.map(function(c,i,a) {
         c.write('SYSTEM: STARTING NEW GAME');
         c.write('To accuse a player use the (Tilde) ~<name>, ACCUSE:<name>, or ACC!<name> \n '+
           'Do not add BOT at the end \n '+
           'YOUR BOT NAME IS: ' + c.botId);
       });
+      gamesDuration++;
     }
-    gamesDuration++;
-    if (Math.floor(Math.random() * 3) === 1) {
-      var chosenBot = botArr[Math.floor(Math.random() * botArr.length)];
-
-      sockets.map((c,i,a)=>{
-        c.write('USER: ' + chosenBot + ' BOT said: IAMABOTYO');
-      });
+    if (gamesDuration < botLines.length) {
+      if (Math.floor(Math.random() * 3) === 1) {
+        gamesDuration++;
+      }
+    }
+    if (Math.floor(Math.random() * 15) === 1) {
+      if((Date.parse(new Date()) - lastBotMessage) >= 2000) {
+        var chosenBot = botArr[Math.floor(Math.random() * botArr.length)];
+        var chosenLine = botLines[Math.floor(Math.random() * gamesDuration)]
+        var botSays = 'USER: ' + chosenBot + ' BOT said:' + chosenLine;
+        sockets.map((c,i,a)=>{
+          c.write(botSays);
+        });
+        lastBotMessage = Date.parse(new Date());
+      }
     }
     if (botsRemaining === 0 && botArr.length === 0) {
       sockets.map(function(c, i, a) {
